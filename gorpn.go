@@ -43,6 +43,14 @@ func (rpn *RPN) parseToken(token string) {
 		b := rpn.pop()
 		a := rpn.pop()
 		rpn.push(a - b)
+	} else if token == "*" {
+		b := rpn.pop()
+		a := rpn.pop()
+		rpn.push(a * b)
+	} else if token == "/" {
+		b := rpn.pop()
+		a := rpn.pop()
+		rpn.push(a / b)
 	}
 }
 
