@@ -4,6 +4,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"regexp"
 	"strconv"
@@ -17,6 +18,10 @@ const maxSize = 100
 type RPN struct {
 	stack []float64
 }
+
+type BinaryOperator func(float64, float64) float64
+
+var ops = make(map[string]BinaryOperator)
 
 func (rpn *RPN) push(x float64) {
 	rpn.stack = append(rpn.stack, x)
@@ -35,22 +40,20 @@ func (rpn *RPN) parseToken(token string) {
 		// should I do this through error handling?
 		number, _ := strconv.ParseFloat(token, 64)
 		rpn.push(number)
-	} else if token == "+" {
-		b := rpn.pop()
-		a := rpn.pop()
-		rpn.push(a + b)
-	} else if token == "-" {
-		b := rpn.pop()
-		a := rpn.pop()
-		rpn.push(a - b)
-	} else if token == "*" {
-		b := rpn.pop()
-		a := rpn.pop()
-		rpn.push(a * b)
-	} else if token == "/" {
-		b := rpn.pop()
-		a := rpn.pop()
-		rpn.push(a / b)
+	} else {
+		switch token {
+		case "+",
+			"-",
+			"*",
+			"/":
+			b := rpn.pop()
+			a := rpn.pop()
+			rpn.push(ops[token](a, b))
+		case "^":
+			b := rpn.pop()
+			a := rpn.pop()
+			rpn.push(math.Pow(a, b))
+		}
 	}
 }
 
@@ -73,6 +76,11 @@ func (rpn *RPN) parseTokens(text string) bool {
 }
 
 func main() {
+	ops["+"] = func(x float64, y float64) float64 { return x + y }
+	ops["-"] = func(x float64, y float64) float64 { return x - y }
+	ops["*"] = func(x float64, y float64) float64 { return x * y }
+	ops["/"] = func(x float64, y float64) float64 { return x / y }
+
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("RPN calculator")
 	fmt.Println("Enter a bunch of symbols")
