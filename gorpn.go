@@ -20,8 +20,10 @@ type RPN struct {
 }
 
 type BinaryOperator func(float64, float64) float64
+type UnaryOperator func(float64) float64
 
-var ops = make(map[string]BinaryOperator)
+var binops = make(map[string]BinaryOperator)
+var unops = make(map[string]UnaryOperator)
 
 func (rpn *RPN) push(x float64) {
 	rpn.stack = append(rpn.stack, x)
@@ -45,14 +47,23 @@ func (rpn *RPN) parseToken(token string) {
 		case "+",
 			"-",
 			"*",
-			"/":
+			"/",
+			"^":
 			b := rpn.pop()
 			a := rpn.pop()
-			rpn.push(ops[token](a, b))
-		case "^":
-			b := rpn.pop()
+			rpn.push(binops[token](a, b))
+		case "sin",
+			"cos",
+			"tan",
+			"sqrt",
+			"ln",
+			"exp":
 			a := rpn.pop()
-			rpn.push(math.Pow(a, b))
+			rpn.push(unops[token](a))
+		case "pi":
+			rpn.push(math.Pi)
+		case "e":
+			rpn.push(math.E)
 		}
 	}
 }
@@ -69,17 +80,23 @@ func (rpn *RPN) parseTokens(text string) bool {
 		} else {
 			rpn.parseToken(token)
 		}
-		fmt.Println(rpn)
+		fmt.Println(rpn.stack)
 	}
 	return true
-
 }
 
 func main() {
-	ops["+"] = func(x float64, y float64) float64 { return x + y }
-	ops["-"] = func(x float64, y float64) float64 { return x - y }
-	ops["*"] = func(x float64, y float64) float64 { return x * y }
-	ops["/"] = func(x float64, y float64) float64 { return x / y }
+	binops["+"] = func(x float64, y float64) float64 { return x + y }
+	binops["-"] = func(x float64, y float64) float64 { return x - y }
+	binops["*"] = func(x float64, y float64) float64 { return x * y }
+	binops["/"] = func(x float64, y float64) float64 { return x / y }
+	binops["^"] = math.Pow
+	unops["sin"] = math.Sin
+	unops["cos"] = math.Cos
+	unops["tan"] = math.Tan
+	unops["sqrt"] = math.Sqrt
+	unops["ln"] = math.Log
+	unops["exp"] = math.Exp
 
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("RPN calculator")
@@ -92,5 +109,4 @@ func main() {
 		text, _ := reader.ReadString('\n')
 		repeat = rpn.parseTokens(text)
 	}
-
 }
