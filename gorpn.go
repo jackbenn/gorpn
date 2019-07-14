@@ -48,7 +48,8 @@ func (rpn *RPN) parseToken(token string) {
 			"-",
 			"*",
 			"/",
-			"^":
+			"^",
+			"%":
 			b := rpn.pop()
 			a := rpn.pop()
 			rpn.push(binops[token](a, b))
@@ -64,7 +65,17 @@ func (rpn *RPN) parseToken(token string) {
 			rpn.push(math.Pi)
 		case "e":
 			rpn.push(math.E)
+		case "$":
+			b := rpn.pop()
+			a := rpn.pop()
+			rpn.push(b)
+			rpn.push(a)
+		case "?":
+			fmt.Println("binary operators: + - * / ^ %")
+			fmt.Println("Unary Operators: sin cos tan sqrt ln exp")
+			fmt.Println("Constants: pi e")
 		}
+
 	}
 }
 
@@ -80,8 +91,8 @@ func (rpn *RPN) parseTokens(text string) bool {
 		} else {
 			rpn.parseToken(token)
 		}
-		fmt.Println(rpn.stack)
 	}
+	fmt.Println(rpn.stack)
 	return true
 }
 
@@ -91,6 +102,7 @@ func main() {
 	binops["*"] = func(x float64, y float64) float64 { return x * y }
 	binops["/"] = func(x float64, y float64) float64 { return x / y }
 	binops["^"] = math.Pow
+	binops["%"] = math.Mod
 	unops["sin"] = math.Sin
 	unops["cos"] = math.Cos
 	unops["tan"] = math.Tan
@@ -100,7 +112,7 @@ func main() {
 
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("RPN calculator")
-	fmt.Println("Enter a bunch of symbols")
+	fmt.Println("Enter numbers or operators, or q to quit or ? for help")
 	// when I understand slices better I can do this better
 	var rpn RPN
 	repeat := true
